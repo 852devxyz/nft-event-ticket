@@ -13,12 +13,10 @@ forge build
 forge test -vvvv --gas-report
 ```
 
-2. Deploy contract:
+2. Deploy contract (edit constructor arguments in `EventTicket.s.sol`):
 ```
-forge create --rpc-url RPC-API-ENDPOINT-HERE \
---constructor-args ... \
---private-key YOUR_PRIVATE_KEY \
-src/EventTicket.sol:EventTicket 
+source .env
+forge script script/EventTicket.s.sol:EventTicketScript --rpc-url $GOERLI_RPC_URL --broadcast --verify -vvvv
 ```
 
 * Token standard: ERC1155

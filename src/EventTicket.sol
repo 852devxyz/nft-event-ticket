@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "openzeppelin-contracts/contracts/token/ERC1155/ERC1155.sol";
+import "openzeppelin-contracts/contracts/token/ERC1155/extensions/ERC1155URIStorage.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
 import "openzeppelin-contracts/contracts/security/Pausable.sol";
 import "openzeppelin-contracts/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 
-contract EventTicket is ERC1155, Ownable, Pausable, ERC1155Supply {
+contract EventTicket is ERC1155URIStorage, Ownable, Pausable, ERC1155Supply {
+    string public name;
+    string public symbol;
+    string public contractURI;
     mapping(uint => uint) public ticketPrice;
     mapping(uint => bool) public forSale;
     mapping(uint => uint) public capacity;
@@ -19,15 +22,23 @@ contract EventTicket is ERC1155, Ownable, Pausable, ERC1155Supply {
      * @param _ticketPrice Price of the ticket
      */
     constructor(
+        string memory _name,
+        string memory _symbol,
+        string memory _contractURI,
+        string memory _eventURI,
         address _revenueAddress,
         uint _capacity,
         uint _ticketPrice
-    ) ERC1155("https://852web3.io/static/nft/{id}.json") {
-        // TODO: change nft/ to nft/event/
+    ) ERC1155("") {
+        name = _name;
+        symbol = _symbol;
+        contractURI = _contractURI;
+
         revenueAddress = _revenueAddress;
         ticketPrice[1] = _ticketPrice;
         capacity[1] = _capacity;
         forSale[1] = true;
+        _setURI(1, _eventURI);
     }
 
     /**
@@ -39,10 +50,7 @@ contract EventTicket is ERC1155, Ownable, Pausable, ERC1155Supply {
         require(forSale[_eventId], "Event is not for sale");
         require(totalSupply(_eventId) < capacity[_eventId], "Event is full");
         require(msg.value >= ticketPrice[_eventId], "Not enough tokens sent");
-        require(
-            balanceOf(_address, _eventId) == 0,
-            "Already has a ticket"
-        );
+        require(balanceOf(_address, _eventId) == 0, "Already has a ticket");
 
         _mint(_address, _eventId, 1, "");
         payable(revenueAddress).transfer(ticketPrice[_eventId]);
@@ -111,19 +119,36 @@ contract EventTicket is ERC1155, Ownable, Pausable, ERC1155Supply {
     function createEvent(
         uint _capacity,
         uint _ticketPrice,
-        uint _eventId
+        uint _eventId,
+        string memory _eventURI
     ) public onlyOwner {
         ticketPrice[_eventId] = _ticketPrice;
         capacity[_eventId] = _capacity;
         forSale[_eventId] = true;
+        _setURI(_eventId, _eventURI);
     }
 
     /**
-     * @dev Set the URI
-     * @param newuri New URI
+     * @dev override uri
      */
-    function setURI(string memory newuri) public onlyOwner {
-        _setURI(newuri);
+    function uri(
+        uint256 tokenId
+    ) public view override(ERC1155, ERC1155URIStorage) returns (string memory) {
+        return ERC1155URIStorage.uri(tokenId);
+    }
+
+    /**
+     * @dev expose setURI
+     */
+    function setURI(uint256 tokenId, string memory _uri) public onlyOwner {
+        _setURI(tokenId, _uri);
+    }
+
+    /**
+     * @dev Set the contract URI
+     */
+    function setContractURI(string memory _contractURI) public onlyOwner {
+        contractURI = _contractURI;
     }
 
     /**

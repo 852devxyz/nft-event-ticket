@@ -6,7 +6,7 @@ import "../src/EventTicket.sol";
 
 contract EventTicketTest is Test {
     EventTicket public eventTicket;
-    
+
     address ownerAddress = address(0x1111);
     address revenueAddress = address(0x2222);
     address aliceAddress = address(0x3333);
@@ -19,14 +19,27 @@ contract EventTicketTest is Test {
         vm.deal(bobAddress, 10 ether);
 
         vm.prank(ownerAddress);
-        eventTicket = new EventTicket(revenueAddress, 1, 1 ether);
+        eventTicket = new EventTicket(
+            "852Web3 Event Ticket",
+            "TIX",
+            "https://852web3.io/static/nft/1.json",
+            "https://852web3.io/static/nft/1.json",
+            revenueAddress,
+            1,
+            1 ether
+        );
 
         assertEq(eventTicket.owner(), ownerAddress);
         assertEq(eventTicket.revenueAddress(), revenueAddress);
+
+        assertEq(eventTicket.name(), "852Web3 Event Ticket");
+        assertEq(eventTicket.symbol(), "TIX");
+        assertEq(eventTicket.contractURI(), "https://852web3.io/static/nft/1.json");
+        assertEq(eventTicket.uri(1), "https://852web3.io/static/nft/1.json");
         assertEq(eventTicket.ticketPrice(1), 1 ether);
         assertEq(eventTicket.capacity(1), 1);
         assertEq(eventTicket.forSale(1), true);
-        assertEq(eventTicket.uri(1), "https://852web3.io/static/nft/{id}.json");
+
     }
 
     // Should mint ticket
@@ -84,11 +97,10 @@ contract EventTicketTest is Test {
         eventTicket.mint{value: 1 ether}(1, aliceAddress);
     }
 
-    
     // Should free mint
     function testFreeMint() public {
         vm.prank(ownerAddress);
-        address [] memory addresses = new address[](2);
+        address[] memory addresses = new address[](2);
         addresses[0] = aliceAddress;
         addresses[1] = bobAddress;
         eventTicket.freeMint(1, addresses);
@@ -100,7 +112,7 @@ contract EventTicketTest is Test {
     function testFreeMintNotOwner() public {
         vm.expectRevert(bytes("Ownable: caller is not the owner"));
         vm.prank(aliceAddress);
-        address [] memory addresses = new address[](2);
+        address[] memory addresses = new address[](2);
         addresses[0] = aliceAddress;
         addresses[1] = bobAddress;
         eventTicket.freeMint(1, addresses);
@@ -165,10 +177,11 @@ contract EventTicketTest is Test {
     // Should create event
     function testCreateEvent() public {
         vm.prank(ownerAddress);
-        eventTicket.createEvent(2, 2 ether, 2);
+        eventTicket.createEvent(2, 2 ether, 2, "Test Event 2");
         assertEq(eventTicket.ticketPrice(2), 2 ether);
         assertEq(eventTicket.capacity(2), 2);
         assertEq(eventTicket.forSale(2), true);
+        assertEq(eventTicket.uri(2), "Test Event 2");
         vm.prank(aliceAddress);
         eventTicket.mint{value: 2 ether}(2, aliceAddress);
         assertEq(eventTicket.balanceOf(aliceAddress, 2), 1);
@@ -178,7 +191,7 @@ contract EventTicketTest is Test {
     function testCreateEventNotOwner() public {
         vm.expectRevert(bytes("Ownable: caller is not the owner"));
         vm.prank(aliceAddress);
-        eventTicket.createEvent(2, 2 ether, 2);
+        eventTicket.createEvent(2, 2 ether, 2, "");
     }
 
     // Should not transfer token
@@ -230,18 +243,31 @@ contract EventTicketTest is Test {
         eventTicket.unpause();
     }
 
+    // Should set contract URI
+    function testSetContractURI() public {
+        vm.prank(ownerAddress);
+        eventTicket.setContractURI("testing");
+        assertEq(eventTicket.contractURI(), "testing");
+    }
+
+    // Should not set contract URI if not owner
+    function testSetContractURINotOwner() public {
+        vm.expectRevert(bytes("Ownable: caller is not the owner"));
+        vm.prank(aliceAddress);
+        eventTicket.setContractURI("testing");
+    }
+
     // Should set URI
     function testSetURI() public {
         vm.prank(ownerAddress);
-        eventTicket.setURI("testing/{id}");
-        assertEq(eventTicket.uri(1), "testing/{id}");
+        eventTicket.setURI(1, "testing");
+        assertEq(eventTicket.uri(1), "testing");
     }
 
     // Should not set URI if not owner
     function testSetURINotOwner() public {
         vm.expectRevert(bytes("Ownable: caller is not the owner"));
         vm.prank(aliceAddress);
-        eventTicket.setURI("testing/{id}");
+        eventTicket.setURI(1, "testing");
     }
-
 }
