@@ -13,8 +13,8 @@ contract EventTicketScript is Script {
         new EventTicket(
             "852Web3 Event Ticket",
             "TIX",
-            "https://852web3.io/static/nft/0.json",
-            "https://852web3.io/static/nft/",
+            "https://852web3.io/static/nft/tickets/0.json",
+            "https://852web3.io/static/nft/tickets/",
             revenueAddress,
             1000,
             0.0001 ether
