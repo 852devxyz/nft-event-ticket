@@ -22,8 +22,8 @@ contract EventTicketTest is Test {
         eventTicket = new EventTicket(
             "852Web3 Event Ticket",
             "TIX",
-            "https://852web3.io/static/nft/1.json",
-            "https://852web3.io/static/nft/1.json",
+            "https://852web3.io/static/nft/tickets/0.json",
+            "https://852web3.io/static/nft/tickets/",
             revenueAddress,
             1,
             1 ether
@@ -34,8 +34,8 @@ contract EventTicketTest is Test {
 
         assertEq(eventTicket.name(), "852Web3 Event Ticket");
         assertEq(eventTicket.symbol(), "TIX");
-        assertEq(eventTicket.contractURI(), "https://852web3.io/static/nft/1.json");
-        assertEq(eventTicket.uri(1), "https://852web3.io/static/nft/1.json");
+        assertEq(eventTicket.contractURI(), "https://852web3.io/static/nft/tickets/0.json");
+        assertEq(eventTicket.uri(1), "https://852web3.io/static/nft/tickets/1.json");
         assertEq(eventTicket.ticketPrice(1), 1 ether);
         assertEq(eventTicket.capacity(1), 1);
         assertEq(eventTicket.forSale(1), true);
@@ -160,28 +160,14 @@ contract EventTicketTest is Test {
         eventTicket.setTicketPrice(1, 2 ether);
     }
 
-    // Should set revenue address
-    function testSetRevenueAddress() public {
-        vm.prank(ownerAddress);
-        eventTicket.setRevenueAddress(address(0x5555));
-        assertEq(eventTicket.revenueAddress(), address(0x5555));
-    }
-
-    // Should not set revenue address if not owner
-    function testSetRevenueAddressNotOwner() public {
-        vm.expectRevert(bytes("Ownable: caller is not the owner"));
-        vm.prank(aliceAddress);
-        eventTicket.setRevenueAddress(address(0x5555));
-    }
-
     // Should create event
     function testCreateEvent() public {
         vm.prank(ownerAddress);
-        eventTicket.createEvent(2, 2 ether, 2, "Test Event 2");
+        eventTicket.createEvent(2, 2 ether, 2);
         assertEq(eventTicket.ticketPrice(2), 2 ether);
         assertEq(eventTicket.capacity(2), 2);
         assertEq(eventTicket.forSale(2), true);
-        assertEq(eventTicket.uri(2), "Test Event 2");
+        assertEq(eventTicket.uri(2), "https://852web3.io/static/nft/tickets/2.json");
         vm.prank(aliceAddress);
         eventTicket.mint{value: 2 ether}(2, aliceAddress);
         assertEq(eventTicket.balanceOf(aliceAddress, 2), 1);
@@ -191,7 +177,7 @@ contract EventTicketTest is Test {
     function testCreateEventNotOwner() public {
         vm.expectRevert(bytes("Ownable: caller is not the owner"));
         vm.prank(aliceAddress);
-        eventTicket.createEvent(2, 2 ether, 2, "");
+        eventTicket.createEvent(2, 2 ether, 2);
     }
 
     // Should not transfer token
@@ -257,17 +243,17 @@ contract EventTicketTest is Test {
         eventTicket.setContractURI("testing");
     }
 
-    // Should set URI
-    function testSetURI() public {
+    // Should set baseURI
+    function testSetBaseURI() public {
         vm.prank(ownerAddress);
-        eventTicket.setURI(1, "testing");
-        assertEq(eventTicket.uri(1), "testing");
+        eventTicket.setBaseURI("testing/");
+        assertEq(eventTicket.uri(1), "testing/1.json");
     }
 
-    // Should not set URI if not owner
+    // Should not set base URI if not owner
     function testSetURINotOwner() public {
         vm.expectRevert(bytes("Ownable: caller is not the owner"));
         vm.prank(aliceAddress);
-        eventTicket.setURI(1, "testing");
+        eventTicket.setBaseURI("testing/");
     }
 }

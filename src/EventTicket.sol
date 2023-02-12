@@ -6,14 +6,16 @@ import "openzeppelin-contracts/contracts/access/Ownable.sol";
 import "openzeppelin-contracts/contracts/security/Pausable.sol";
 import "openzeppelin-contracts/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 
-contract EventTicket is ERC1155URIStorage, Ownable, Pausable, ERC1155Supply {
+contract EventTicket is ERC1155, Ownable, Pausable, ERC1155Supply {
     string public name;
     string public symbol;
     string public contractURI;
+    string public baseURI;
+
     mapping(uint => uint) public ticketPrice;
     mapping(uint => bool) public forSale;
     mapping(uint => uint) public capacity;
-    address public revenueAddress;
+    address public immutable revenueAddress;
 
     /**
      * @dev Create the smart contract with first event
@@ -25,7 +27,7 @@ contract EventTicket is ERC1155URIStorage, Ownable, Pausable, ERC1155Supply {
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        string memory _eventURI,
+        string memory _baseURI,
         address _revenueAddress,
         uint _capacity,
         uint _ticketPrice
@@ -33,12 +35,12 @@ contract EventTicket is ERC1155URIStorage, Ownable, Pausable, ERC1155Supply {
         name = _name;
         symbol = _symbol;
         contractURI = _contractURI;
+        baseURI = _baseURI;
 
         revenueAddress = _revenueAddress;
         ticketPrice[1] = _ticketPrice;
         capacity[1] = _capacity;
         forSale[1] = true;
-        _setURI(1, _eventURI);
     }
 
     /**
@@ -94,14 +96,6 @@ contract EventTicket is ERC1155URIStorage, Ownable, Pausable, ERC1155Supply {
     }
 
     /**
-     * @dev Set the revenue address
-     * @param _revenueAddress Address to send revenue to
-     */
-    function setRevenueAddress(address _revenueAddress) public onlyOwner {
-        revenueAddress = _revenueAddress;
-    }
-
-    /**
      * @dev Set the event to be for sale
      * @param _eventId Event ID
      * @param _forSale Whether the event is for sale
@@ -119,29 +113,25 @@ contract EventTicket is ERC1155URIStorage, Ownable, Pausable, ERC1155Supply {
     function createEvent(
         uint _capacity,
         uint _ticketPrice,
-        uint _eventId,
-        string memory _eventURI
+        uint _eventId
     ) public onlyOwner {
         ticketPrice[_eventId] = _ticketPrice;
         capacity[_eventId] = _capacity;
         forSale[_eventId] = true;
-        _setURI(_eventId, _eventURI);
     }
 
     /**
-     * @dev override uri
+     * @dev Get the URI of a token
      */
-    function uri(
-        uint256 tokenId
-    ) public view override(ERC1155, ERC1155URIStorage) returns (string memory) {
-        return ERC1155URIStorage.uri(tokenId);
+    function uri(uint256 _tokenid) override public view returns (string memory) {
+        return string(abi.encodePacked(baseURI, Strings.toString(_tokenid), ".json"));
     }
 
     /**
-     * @dev expose setURI
+     * @dev Set the base URI
      */
-    function setURI(uint256 tokenId, string memory _uri) public onlyOwner {
-        _setURI(tokenId, _uri);
+    function setBaseURI(string memory _baseURI) public onlyOwner {
+        baseURI = _baseURI;
     }
 
     /**
