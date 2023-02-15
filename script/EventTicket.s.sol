@@ -16,8 +16,8 @@ contract EventTicketScript is Script {
             "https://852web3.io/static/nft/tickets/0.json",
             "https://852web3.io/static/nft/tickets/",
             revenueAddress,
-            1000,
-            0.0001 ether
+            100,
+            11 ether
         ); // TODO: change toe real revenue address and correct urls
 
         vm.stopBroadcast();
