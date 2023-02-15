@@ -18,7 +18,7 @@ contract EventTicketScript is Script {
             revenueAddress,
             100,
             11 ether
-        ); // TODO: change toe real revenue address and correct urls
+        );
 
         vm.stopBroadcast();
     }
