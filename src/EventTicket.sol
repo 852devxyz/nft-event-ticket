@@ -55,10 +55,18 @@ contract EventTicket is ERC1155, Ownable, Pausable, ERC1155Supply {
         require(balanceOf(_address, _eventId) == 0, "Already has a ticket");
 
         _mint(_address, _eventId, 1, "");
-        payable(revenueAddress).transfer(ticketPrice[_eventId]);
-        // refund
+        // Send revenue to revenueAddress
+        (bool success, ) = payable(revenueAddress).call{
+            value: ticketPrice[_eventId]
+        }("");
+        require(success, "Failed to send revenue");
+
+        // Refund excess ether
         if (msg.value > ticketPrice[_eventId]) {
-            payable(msg.sender).transfer(msg.value - ticketPrice[_eventId]);
+            (success, ) = payable(msg.sender).call{
+                value: msg.value - ticketPrice[_eventId]
+            }("");
+            require(success, "Failed to refund");
         }
     }
 
@@ -123,8 +131,13 @@ contract EventTicket is ERC1155, Ownable, Pausable, ERC1155Supply {
     /**
      * @dev Get the URI of a token
      */
-    function uri(uint256 _tokenid) override public view returns (string memory) {
-        return string(abi.encodePacked(baseURI, Strings.toString(_tokenid), ".json"));
+    function uri(
+        uint256 _tokenid
+    ) public view override returns (string memory) {
+        return
+            string(
+                abi.encodePacked(baseURI, Strings.toString(_tokenid), ".json")
+            );
     }
 
     /**
